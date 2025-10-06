@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 project(bxzstr)
 
+option(INSTALL_BXZSTR "Install bxzstr library" OFF)
+
 ## For FindZstd
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -92,7 +94,10 @@ add_library(bxzstr::bxzstr ALIAS bxzstr)
 
 # -- set target properties
 
-target_include_directories(bxzstr INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(bxzstr
+                           INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                                     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
 target_link_libraries(bxzstr INTERFACE ZLIB::ZLIB BZip2::BZip2 LibLZMA::LibLZMA Zstd::Zstd)
 target_compile_features(bxzstr INTERFACE cxx_std_11) # require c++11 flag
 
@@ -149,3 +154,34 @@ if(CMAKE_BUILD_TESTS)
     target_link_libraries(runTests gtest gtest_main zstd)
   endif()
 endif()
+
+if (INSTALL_BXZSTR)
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    configure_file(${PROJECT_SOURCE_DIR}/cmake/pkg-config.pc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY)
+
+    configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in
+                                  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+                                  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+                                  PATH_VARS CMAKE_INSTALL_LIBDIR)
+
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+
+    install(TARGETS bxzstr
+            EXPORT ${PROJECT_NAME}-targets
+            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+
+    install(EXPORT ${PROJECT_NAME}-targets
+            NAMESPACE ${PROJECT_NAME}::
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+
+endif ()
