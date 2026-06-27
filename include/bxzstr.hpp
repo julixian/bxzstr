@@ -29,7 +29,8 @@ class istreambuf : public std::streambuf {
 	      strm_p(nullptr),
 	      buff_size(_buff_size),
 	      auto_detect(_auto_detect),
-	      auto_detect_run(false) {
+	      auto_detect_run(false),
+	      out_buff_end_abs(0) {
         assert(sbuf_p);
         in_buff = new char [buff_size];
         in_buff_start = in_buff;
@@ -43,7 +44,8 @@ class istreambuf : public std::streambuf {
 	      buff_size(_buff_size),
 	      auto_detect(false),
 	      auto_detect_run(false),
-        type(type) {
+        type(type),
+        out_buff_end_abs(0) {
         assert(sbuf_p);
         in_buff = new char [buff_size];
         in_buff_start = in_buff;
@@ -154,7 +156,8 @@ class istreambuf : public std::streambuf {
   private:
   
     std::streampos get_cursor(){
-        return out_buff_end_abs + gptr() - egptr();
+        const std::streamoff buffered = static_cast< std::streamoff >(egptr() - gptr());
+        return std::streampos(out_buff_end_abs - buffered);
     }
 
     void seek_to_zero(){
@@ -176,7 +179,7 @@ class istreambuf : public std::streambuf {
     bool auto_detect;
     bool auto_detect_run;
     Compression type;
-    std::streampos out_buff_end_abs;
+    std::streamoff out_buff_end_abs;
 
     static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class istreambuf
