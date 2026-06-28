@@ -94,14 +94,14 @@ class zstd_stream_wrapper : public stream_wrapper {
     bool done() const override { return this->stream_end(); }
 
     const unsigned char* next_in() const override { return static_cast<unsigned char*>(this->buffIn); }
-    long avail_in() const override { return this->buffInSize; }
+    std::size_t avail_in() const override { return this->buffInSize; }
     unsigned char* next_out() const override { return static_cast<unsigned char*>(this->buffOut); }
-    long avail_out() const override { return this->buffOutSize; }
+    std::size_t avail_out() const override { return this->buffOutSize; }
 
     void set_next_in(const unsigned char* in) override { this->buffIn = (void*)in; }
-    void set_avail_in(long in) override { this->buffInSize = (size_t)in; }
+    void set_avail_in(std::size_t in) override { this->buffInSize = in; }
     void set_next_out(const unsigned char* in) override { this->buffOut = (void*)in; }
-    void set_avail_out(long in) override { this->buffOutSize = (size_t)in; }
+    void set_avail_out(std::size_t in) override { this->buffOutSize = in; }
 
   private:
     bool isInput;

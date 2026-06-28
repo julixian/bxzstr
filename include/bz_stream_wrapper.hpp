@@ -12,6 +12,7 @@
 
 #include <bzlib.h>
 
+#include <limits>
 #include <string>
 #include <sstream>
 #include <exception>
@@ -106,16 +107,22 @@ class bz_stream_wrapper : public bz_stream, public stream_wrapper {
     bool done() const override { return this->stream_end(); }
 
     const uint8_t* next_in() const override { return (uint8_t*)bz_stream::next_in; }
-    long avail_in() const override { return bz_stream::avail_in; }
+    std::size_t avail_in() const override { return bz_stream::avail_in; }
     uint8_t* next_out() const override { return (uint8_t*)bz_stream::next_out; }
-    long avail_out() const override { return bz_stream::avail_out; }
+    std::size_t avail_out() const override { return bz_stream::avail_out; }
 
     void set_next_in(const unsigned char* in) override { bz_stream::next_in = (char*)in; }
-    void set_avail_in(const long in) override { bz_stream::avail_in = in; }
+    void set_avail_in(std::size_t in) override { bz_stream::avail_in = checked_avail(in); }
     void set_next_out(const uint8_t* in) override { bz_stream::next_out = (char*)in; }
-    void set_avail_out(const long in) override { bz_stream::avail_out = in; }
+    void set_avail_out(std::size_t in) override { bz_stream::avail_out = checked_avail(in); }
 
   private:
+    static unsigned int checked_avail(std::size_t in) {
+	if (in > static_cast<std::size_t>(std::numeric_limits<unsigned int>::max()))
+	    throw bzException("buffer is too large for bzip2");
+	return static_cast<unsigned int>(in);
+    }
+
     bool is_input;
     int ret;
 }; // class bz_stream_wrapper

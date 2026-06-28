@@ -12,6 +12,7 @@
 
 #include <zlib.h>
 
+#include <limits>
 #include <string>
 #include <sstream>
 #include <exception>
@@ -96,16 +97,22 @@ class z_stream_wrapper : public z_stream, public stream_wrapper {
     bool done() const override { return (this->ret == Z_BUF_ERROR || this->stream_end()); }
 
     const uint8_t* next_in() const override { return z_stream::next_in; }
-    long avail_in() const override { return z_stream::avail_in; }
+    std::size_t avail_in() const override { return z_stream::avail_in; }
     uint8_t* next_out() const override { return z_stream::next_out; }
-    long avail_out() const override { return z_stream::avail_out; }
+    std::size_t avail_out() const override { return z_stream::avail_out; }
 
     void set_next_in(const unsigned char* in) override { z_stream::next_in = (unsigned char*)in; }
-    void set_avail_in(long in) override { z_stream::avail_in = in; }
+    void set_avail_in(std::size_t in) override { z_stream::avail_in = checked_avail(in); }
     void set_next_out(const uint8_t* in) override { z_stream::next_out = const_cast<Bytef*>(in); }
-    void set_avail_out(long in) override { z_stream::avail_out = in; }
+    void set_avail_out(std::size_t in) override { z_stream::avail_out = checked_avail(in); }
 
   private:
+    static uInt checked_avail(std::size_t in) {
+	if (in > static_cast<std::size_t>(std::numeric_limits<uInt>::max()))
+	    throw zException("buffer is too large for zlib");
+	return static_cast<uInt>(in);
+    }
+
     bool is_input;
     int ret;
 }; // class bz_stream_wrapper

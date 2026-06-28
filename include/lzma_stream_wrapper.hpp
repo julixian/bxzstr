@@ -99,14 +99,14 @@ class lzma_stream_wrapper : public lzma_stream, public stream_wrapper {
     bool done() const override { return (this->ret == LZMA_BUF_ERROR || this->stream_end()); }
 
     const uint8_t* next_in() const override { return lzma_stream::next_in; }
-    long avail_in() const override { return lzma_stream::avail_in; }
+    std::size_t avail_in() const override { return lzma_stream::avail_in; }
     uint8_t* next_out() const override { return lzma_stream::next_out; }
-    long avail_out() const override { return lzma_stream::avail_out; }
+    std::size_t avail_out() const override { return lzma_stream::avail_out; }
 
     void set_next_in(const unsigned char* in) override { lzma_stream::next_in = in; }
-    void set_avail_in(long in) override { lzma_stream::avail_in = in; }
+    void set_avail_in(std::size_t in) override { lzma_stream::avail_in = in; }
     void set_next_out(const uint8_t* in) override { lzma_stream::next_out = const_cast<uint8_t*>(in); }
-    void set_avail_out(long in) override { lzma_stream::avail_out = in; }
+    void set_avail_out(std::size_t in) override { lzma_stream::avail_out = in; }
 
   private:
     bool is_input;

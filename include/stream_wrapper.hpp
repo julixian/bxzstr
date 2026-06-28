@@ -8,6 +8,9 @@
 #ifndef BXZSTR_STREAM_WRAPPER_HPP
 #define BXZSTR_STREAM_WRAPPER_HPP
 
+#include <cstddef>
+#include <cstdint>
+
 namespace bxz {
 namespace detail {
 class stream_wrapper {
@@ -22,14 +25,14 @@ class stream_wrapper {
     virtual bool done() const =0;
 
     virtual const uint8_t* next_in() const =0;
-    virtual long avail_in() const =0;
+    virtual std::size_t avail_in() const =0;
     virtual uint8_t* next_out() const =0;
-    virtual long avail_out() const =0;
+    virtual std::size_t avail_out() const =0;
 
     virtual void set_next_in(const unsigned char* in) =0;
-    virtual void set_avail_in(const long in) =0;
+    virtual void set_avail_in(std::size_t in) =0;
     virtual void set_next_out(const uint8_t* in) =0;
-    virtual void set_avail_out(const long in) =0;
+    virtual void set_avail_out(std::size_t in) =0;
 };
 } // namespace detail
 } // namespace bxz

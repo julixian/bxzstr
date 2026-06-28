@@ -130,9 +130,9 @@ class istreambuf : public std::streambuf {
                     // run inflate() on input
 		    if (! strm_p) init_stream(this->type, true, &strm_p);
 		    strm_p->set_next_in(reinterpret_cast< decltype(strm_p->next_in()) >(in_buff_start));
-		    strm_p->set_avail_in(in_buff_end - in_buff_start);
+		    strm_p->set_avail_in(buffer_size(in_buff_start, in_buff_end));
 		    strm_p->set_next_out(reinterpret_cast< decltype(strm_p->next_out()) >(out_buff_free_start));
-		    strm_p->set_avail_out((out_buff + buff_size) - out_buff_free_start);
+		    strm_p->set_avail_out(buffer_size(out_buff_free_start, out_buff + buff_size));
 		    strm_p->decompress();
                     // update in&out pointers following inflate()
 		    auto tmp = const_cast< unsigned char* >(strm_p->next_in()); // cast away const qualifiers
@@ -147,7 +147,7 @@ class istreambuf : public std::streambuf {
             // 2 exit conditions:
             // - end of input: there might or might not be output available
             // - out_buff_free_start != out_buff: output available
-            out_buff_end_abs += out_buff_free_start-out_buff;
+            out_buff_end_abs += static_cast< std::streamoff >(buffer_size(out_buff, out_buff_free_start));
             this->setg(out_buff, out_buff, out_buff_free_start);
         }
         return this->gptr() == this->egptr()
@@ -155,6 +155,10 @@ class istreambuf : public std::streambuf {
     }
   private:
   
+    static std::size_t buffer_size(const char* first, const char* last) {
+        return static_cast< std::size_t >(last - first);
+    }
+
     std::streampos get_cursor(){
         const std::streamoff buffered = static_cast< std::streamoff >(egptr() - gptr());
         return std::streampos(out_buff_end_abs - buffered);
@@ -234,7 +238,7 @@ class ostreambuf : public std::streambuf {
     }
     virtual std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof()) {
         strm_p->set_next_in(reinterpret_cast< decltype(strm_p->next_in()) >(pbase()));
-        strm_p->set_avail_in(pptr() - pbase());
+        strm_p->set_avail_in(buffer_size(pbase(), pptr()));
         while (strm_p->avail_in() > 0) {
             int r = deflate_loop(bxz_run(this->type));
             if (r != 0) {
@@ -258,6 +262,10 @@ class ostreambuf : public std::streambuf {
     }
 
   private:
+    static std::size_t buffer_size(const char* first, const char* last) {
+        return static_cast< std::size_t >(last - first);
+    }
+
     std::streambuf* sbuf_p;
     char* in_buff;
     char* out_buff;
