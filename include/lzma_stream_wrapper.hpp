@@ -57,7 +57,7 @@ class lzmaException : public std::exception {
 		_msg += "[" + oss.str() + "]: ";
 		break;
         }
-        _msg += ret;
+        _msg += std::to_string(static_cast<int>(ret));
     }
     lzmaException(const std::string msg) : _msg(msg) {}
 

@@ -247,7 +247,7 @@ class ostreambuf : public std::streambuf {
             }
         }
         setp(in_buff, in_buff + buff_size);
-        return traits_type::eq_int_type(c, traits_type::eof()) ? traits_type::eof() : sputc(c);
+        return traits_type::eq_int_type(c, traits_type::eof()) ? traits_type::eof() : sputc(traits_type::to_char_type(c));
     }
     virtual int sync() {
         // first, call overflow to clear in_buff
